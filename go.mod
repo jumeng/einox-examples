@@ -2,7 +2,7 @@ module github.com/jumeng/einox-examples
 
 go 1.26.1
 
-require github.com/jumeng/einox v0.1.1
+require github.com/jumeng/einox v0.2.0
 
 require (
 	cloud.google.com/go/auth v0.10.0 // indirect

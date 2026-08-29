@@ -56,12 +56,12 @@ func run(dataDir string) error {
 		llmtest.Turn{Text: "时间查询示例"},
 	)
 
-	m := engine.NewManager(reg, engine.Options{
+	m, err := engine.NewManager(reg, engine.Options{
 		Providers: func() []llm.ProviderSpec { return []llm.ProviderSpec{appsupport.FakeProvider()} },
 		Instruction: func(sess engine.SessionBrief) string {
 			return "你是示例助手。需要时间信息时调用 now 工具。"
 		},
-		Tools: func() []contract.Tool { return []contract.Tool{nowTool()} },
+		Tools: func(sess engine.SessionBrief) []contract.Tool { return []contract.Tool{nowTool()} },
 		CheckPoints: func(operator, sid string) engine.CheckPointStore {
 			return checkpoint.NewCheckPointStore(st, operator, sid)
 		},
@@ -70,6 +70,9 @@ func run(dataDir string) error {
 		},
 		NewModel: fm.Factory(), // 测试注入：接真实端点时删掉本行
 	})
+	if err != nil {
+		return fmt.Errorf("装配失败: %w", err) // 必填项缺失/族名未知等装配错误启动期即拒
+	}
 
 	s := reg.Create("demo", "最小装配示例", contract.ModeManual,
 		contract.UserPrefs{Model: appsupport.FakeModelKey, Effort: "low", Mode: contract.ModeManual})

@@ -67,12 +67,12 @@ func run(dataDir string) error {
 		llmtest.Turn{Text: "审批通路示例"},
 	)
 
-	m := engine.NewManager(reg, engine.Options{
+	m, err := engine.NewManager(reg, engine.Options{
 		Providers: func() []llm.ProviderSpec { return []llm.ProviderSpec{appsupport.FakeProvider()} },
 		Instruction: func(sess engine.SessionBrief) string {
 			return "你是示例助手。需要记笔记时调用 write_note 工具。"
 		},
-		Tools: func() []contract.Tool {
+		Tools: func(sess engine.SessionBrief) []contract.Tool {
 			return []contract.Tool{noteTool(st.Dir())}
 		},
 		CheckPoints: func(operator, sid string) engine.CheckPointStore {
@@ -87,6 +87,9 @@ func run(dataDir string) error {
 		},
 		NewModel: fm.Factory(),
 	})
+	if err != nil {
+		return fmt.Errorf("装配失败: %w", err)
+	}
 
 	s := reg.Create("demo", "审批通路示例", contract.ModeManual,
 		contract.UserPrefs{Model: appsupport.FakeModelKey, Effort: "low", Mode: contract.ModeManual})

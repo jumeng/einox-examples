@@ -25,7 +25,7 @@ import (
 	"github.com/jumeng/einox-examples/internal/appsupport"
 )
 
-func newManager(reg *session.Registry, st *appsupport.Store, fm *llmtest.Model) *engine.Manager {
+func newManager(reg *session.Registry, st *appsupport.Store, fm *llmtest.Model) (*engine.Manager, error) {
 	return engine.NewManager(reg, engine.Options{
 		Providers: func() []llm.ProviderSpec { return []llm.ProviderSpec{appsupport.FakeProvider()} },
 		Instruction: func(sess engine.SessionBrief) string {
@@ -59,7 +59,10 @@ func run(dataDir string) error {
 
 	fmt.Println("── 第一段：进程 A（Subscribe 旁观通道消费事件流）")
 	regA := session.NewRegistry(st)
-	mA := newManager(regA, st, fm)
+	mA, err := newManager(regA, st, fm)
+	if err != nil {
+		return fmt.Errorf("装配失败: %w", err)
+	}
 	s := regA.Create("demo", "多轮会话示例", contract.ModeManual,
 		contract.UserPrefs{Model: appsupport.FakeModelKey, Effort: "low", Mode: contract.ModeManual})
 
@@ -97,7 +100,10 @@ func run(dataDir string) error {
 	// 与第一段对照：emit 回调不回传 user_message（用户输入应用侧自有），
 	// 订阅通道则全量可见——两形态的真实差异。
 	regB := session.NewRegistry(st)
-	mB := newManager(regB, st, fm)
+	mB, err := newManager(regB, st, fm)
+	if err != nil {
+		return fmt.Errorf("装配失败: %w", err)
+	}
 	s2 := regB.Reattach("demo", sid)
 	if s2 == nil {
 		return fmt.Errorf("Reattach %s 失败", sid)

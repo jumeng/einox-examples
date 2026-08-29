@@ -192,8 +192,8 @@ github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnr
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
 github.com/jtolds/gls v4.20.0+incompatible h1:xdiiI2gbIgH/gLH7ADydsJ1uDOEzR8yvV7C0MuV77Wo=
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
-github.com/jumeng/einox v0.1.1 h1:BgOyhC13uLcVe3uw9753BTyj5FwSM5meeTcb0djk1kE=
-github.com/jumeng/einox v0.1.1/go.mod h1:lSRFQ+wMbU8P9mhQsO6YO0TKcN4g7Y/Y0dg1CkgEwQk=
+github.com/jumeng/einox v0.2.0 h1:s5lyeQIpZkPBwCFfzv7ntdJLocJfF34lFM/ZaJOt++s=
+github.com/jumeng/einox v0.2.0/go.mod h1:lSRFQ+wMbU8P9mhQsO6YO0TKcN4g7Y/Y0dg1CkgEwQk=
 github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0/go.mod h1:1NbS8ALrpOvjt0rHPNLyCIeMtbizbir8U//inJ+zuB8=
 github.com/klauspost/cpuid/v2 v2.2.9 h1:66ze0taIn2H33fBvCkXuv9BmCwDfafmiIVpKV9kKGuY=
 github.com/klauspost/cpuid/v2 v2.2.9/go.mod h1:rqkxqrZ1EhYM9G+hXH7YdowN5R5RGN6NK4QwQ3WMXF8=
