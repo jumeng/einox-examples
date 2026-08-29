@@ -30,3 +30,6 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# 示例数据目录（EINOX_EXAMPLE_DATA 指定时的常用落位）
+.demo-data/
