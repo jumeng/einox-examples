@@ -83,6 +83,9 @@ func run(dataDir string) error {
 		SessionToolsOff: []string{engine.FamilyTodo, engine.FamilyAsk, engine.FamilyPlan},
 		// AGENTS.md 注入面收紧：
 		AgentsMDMaxBytes: 8192,
+		// 常驻面预算账本（超线 harness_note 不阻断；v0.5.0 预备期兑现
+		// cbc6a3 的「随发布补一行」待办）：
+		ContextBudget: 8192,
 		// 验证纪律归门不归提示词（判据归应用——示例用自包判据）：
 		FinalGate: func(sess engine.SessionBrief) *engine.GateConfig {
 			if sess.Mode != contract.ModeAuto {

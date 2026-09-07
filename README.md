@@ -11,6 +11,8 @@
 | [minimal](minimal/) | 四项必填的最小装配 + 业务工具（`tools.InferTool`，结构体反射出 schema）+ emit 回调消费事件流，跑通「工具调用 → 结果回喂 → 收束」一整轮 |
 | [approval](approval/) | hitl 审批通路：manual 档写工具挂起（`approval_request`）→ 应用侧登记决议 → `Resume` 从检查点重放续流 |
 | [multiturn](multiturn/) | 事件消费第二形态：`Subscribe` 旁观通道；会话跨进程存活：新进程 `Reattach` + `LoadHistory` 续聊，历史自动带回模型 |
+| [coding-minimal](coding-minimal/) | 极简编码 profile：`SessionToolsOff` 裁交互三件保执行三件 + `FinalGate` 门验证纪律 + `AgentsMDMaxBytes`/`ContextBudget` 常驻面治理 |
+| [memory](memory/) | 跨会话记忆三通道闭环：`TurnEpilogue` 写 owner 域 memory.md + `AgentsMD` 注入（推）+ `recall` 检索（拉），plan 档计划卡一次授权；本仓首份 [`einox.agent.yaml`](einox.agent.yaml) 能力装配清单（经 einox-assemble 知识层流程生成） |
 
 ```bash
 go run ./minimal     # 或 ./approval、./multiturn

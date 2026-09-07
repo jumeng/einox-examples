@@ -1,0 +1,46 @@
+# einox 能力装配清单（manifest-spec: einox/v1）。
+# 场景：客服问答 agent，核心诉求跨会话记忆（上一轮会话的工单摘要在下一
+# 会话被注入与检索）。preset: support 打底，以下显式项按委托书覆盖——
+# 排除项落 false 留 diff 痕迹。装配产物：memory/（main.go + memory_test.go）。
+apiVersion: einox/v1
+name: memory-support-agent
+preset: support                       # recipes/support.md：客服问答基线（recall + agentsmd 记忆环、plan 档）
+model:                                # ① 模型面
+  providers: [fake]                   #   必填。自定义 spec 简写：仓内 appsupport.FakeProvider
+                                      #   （llmtest 剧本端点，零端点零密钥，CI 可跑；接真实
+                                      #   端点时换成 ProviderSpec 清单或 BuiltinProviders 名）
+  fallback-chain: false               #   单端点剧本形态，无降级链可配
+  vision: false                       #   纯文本问答，无图片面
+engine:                               # ② 引擎域
+  checkpoint: file                    #   必填。checkpoint.FileCheckPointStore（经 appsupport.Store）
+  workspace-root: ./data/users/{owner}/workspaces/{sid}
+                                      #   必填。appsupport 用户域布局（用户域子树内，随 owner 隔离）
+  workspace-keep: []                  #   无持久子区（工单/记忆落用户域，不落工作区——工作区一轮一清）
+  workspace-protect: []               #   无写保护区
+hitl:                                 # ③ 审批域
+  mode: plan                          #   委托书：计划卡一次授权（批准计划 = 任务期写授权）
+  args-force: []                      #   无高危命令面（cmd 族已裁）
+  router: false                       #   单用户 CLI 形态，无多参与者路由
+  decision-guard: false               #   同上
+tools:                                # ④ 工具面
+  session-tools-off: [cmd, patch]     #   纯对话无命令执行诉求：裁 cmd/patch；保 fs（recall 依赖律：
+                                      #   外置换指针经 read_file 取回——裁 fs × recall:true 互斥律拒）
+  process-tools: []                   #   currenttime/webfetch 均不需要
+  office: false                       #   委托书排除（无工单报告产物诉求）
+  einoext: []                         #   无 eino-ext 生态件/MCP
+harness:                              # ⑤ harness 域
+  subagents: false                    #   单 agent 客服问答，无编排诉求
+  topology: react                     #   缺省单 agent
+  toolsearch: []                      #   工具面小，无需动态装载瘦身
+  skills: false                       #   无 skill 物化目录
+  agentsmd:                           #   记忆推通道：owner 域记忆文件按序注入（与 support 基线同构，
+    - ./data/users/{owner}/memory.md  #   路径按 appsupport 用户域布局对齐）
+  recall: true                        #   记忆拉通道：检索本 owner 历史会话（委托书核心诉求）
+quality:                              # ⑥ 质量域
+  final-gate: false                   #   对话型产出无 build 类判据（cmd 族已裁，依赖律也不成立）
+  summarizer-fallback: false          #   单端点装配配了也白配
+security:                             # ⑦ 安全面
+  sandbox: false                      #   委托书排除（cmd 族已裁，沙箱无命令面可围）
+  egress: []                          #   无 run_command/webfetch，出口治理无标的
+channels: []                          # ⑧ 渠道：委托书排除（无 feishu 凭据，命令行入口）
+ui: {web: false, tui: false}          # ⑨ 界面：委托书排除（命令行入口即可）
