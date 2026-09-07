@@ -102,8 +102,8 @@ func newManager(reg *session.Registry, st *appsupport.Store, fm *llmtest.Model) 
 		// harness.recall: 记忆拉通道（opt-in，装配即知情决策）。
 		Recall: true,
 		// engine 域记忆写通道：轮自然收束把「标题/任务/摘要」追加进 owner 域
-		// memory.md，下一会话经 AgentsMD 注入——与 recall 合成读写环。首轮
-		// 收尾时异步标题尚未落地（Title 空），与基座列表同款回退 Task。
+		// memory.md，下一会话经 AgentsMD 注入——与 recall 合成读写环。epilogue
+		// 先于异步标题执行（Title 恒空）——回退 Task 与基座列表同款。
 		TurnEpilogue: func(sum engine.TurnEndSummary) {
 			title := sum.Title
 			if title == "" {
@@ -143,15 +143,15 @@ func run(dataDir string) error {
 	ctx := context.Background()
 	owner := "customer-01"
 
-	// 剧本：会话一 3 次调用（submit_plan → file_ticket → 收口）；会话二
-	// 3 次调用（recall → 收口 → 首轮收尾异步标题）。挂起续流（Resume）不
-	// 重演挂起前的模型调用；且经挂起+Resume 收尾的首轮不触发异步标题生成
-	// （挂起时半轮 assistant 消息已 flushAcc 入史，settleTurn 的 firstTurn
-	// 判定为 false）——会话一无标题槽位，标题回退 Task。
+	// 剧本：会话一 4 次调用（submit_plan → file_ticket → 收口 → 首轮收尾
+	// 异步标题）；会话二 3 次调用（recall → 收口 → 标题）。挂起续流（Resume）
+	// 不重演挂起前的模型调用；经挂起+Resume 收尾的首轮同样触发异步标题
+	// （U-1 修复：首轮标记锚定 Run 入口，挂起段入史不再污染判定）。
 	fm := llmtest.New(
 		llmtest.Turn{ToolCalls: []llmtest.ToolCallSpec{{ID: "c1", Name: "submit_plan", Args: `{"task":"登记打印机故障工单","summary":"为用户登记打印机无法打印的故障工单并告知跟进时限","steps":[{"title":"确认信息","detail":"确认故障现象与联系方式"},{"title":"登记工单","detail":"调用 file_ticket 落工单文件并回复用户"}],"risks":"无"}`}}},
 		llmtest.Turn{ToolCalls: []llmtest.ToolCallSpec{{ID: "c2", Name: "file_ticket", Args: `{"title":"打印机无法打印","detail":"打印任务无输出，指示灯闪烁","contact":"customer-01"}`}}},
 		llmtest.Turn{Text: "工单已登记，工程师将在 24 小时内联系您。"},
+		llmtest.Turn{Text: "打印机报修跟进"}, // 会话一标题槽（genTitle 走 Generate，同耗剧本）
 		llmtest.Turn{ToolCalls: []llmtest.ToolCallSpec{{ID: "c3", Name: "recall", Args: `{"query":"打印机"}`}}},
 		llmtest.Turn{Text: "查到您上一轮会话登记过「打印机故障报修」工单，工程师将在 24 小时内联系您。"},
 		llmtest.Turn{Text: "打印机工单追问"},
@@ -220,8 +220,8 @@ func run(dataDir string) error {
 		return fmt.Errorf("记忆条目应含任务标题回退，实际:\n%s", mem1)
 	}
 	title1 := s1.TitleOf()
-	if title1 == "" {
-		title1 = s1.TaskOf() // 挂起轮不生成标题——列表同款回退
+	if title1 != "打印机报修跟进" {
+		return fmt.Errorf("挂起+Resume 收尾的首轮应生成标题（U-1 修复），实得 %q", title1)
 	}
 	fmt.Printf("── 会话一收束: state=%s title=%q\n", s1.StateOf(), title1)
 	fmt.Printf("── 记忆落盘: %s\n── 工单落盘: %s\n",
@@ -244,23 +244,23 @@ func run(dataDir string) error {
 
 	// 推通道证据：会话二首次模型输入含 memory.md 条目（AgentsMD 注入）。
 	inputs := fm.Inputs()
-	if len(inputs) != 6 { // 会话一 3 调（挂起轮无标题槽位）+ 会话二 3 调（2 + 标题）
-		return fmt.Errorf("预期 6 次模型调用，实际 %d", len(inputs))
+	if len(inputs) != 7 { // 会话一 4 调（3 + 标题槽）+ 会话二 3 调（2 + 标题）
+		return fmt.Errorf("预期 7 次模型调用，实际 %d", len(inputs))
 	}
 	var secondFirst strings.Builder
-	for _, msg := range inputs[3] {
+	for _, msg := range inputs[4] {
 		secondFirst.WriteString(msg.Content)
 	}
 	if !strings.Contains(secondFirst.String(), "## 打印机故障报修") {
 		return fmt.Errorf("会话二输入应含注入的记忆条目:\n%s", secondFirst.String())
 	}
 	// 拉通道证据：会话二第二次模型输入含 recall 信封（本 owner 历史会话，
-	// 携 sid 与标题——命中会话一；挂起轮无标题，回退 Task）。
+	// 携 sid 与标题——命中会话一；标题为 U-1 修复后异步生成的真实标题）。
 	var secondSecond strings.Builder
-	for _, msg := range inputs[4] {
+	for _, msg := range inputs[5] {
 		secondSecond.WriteString(msg.Content)
 	}
-	for _, want := range []string{s1.SID, "打印机故障报修"} {
+	for _, want := range []string{s1.SID, "打印机报修跟进"} {
 		if !strings.Contains(secondSecond.String(), want) {
 			return fmt.Errorf("recall 结果应含 %q:\n%s", want, secondSecond.String())
 		}
