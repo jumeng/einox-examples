@@ -2,7 +2,7 @@ module github.com/jumeng/einox-examples
 
 go 1.26.1
 
-require github.com/jumeng/einox v0.2.0
+require github.com/jumeng/einox v0.5.1
 
 require (
 	cloud.google.com/go/auth v0.10.0 // indirect
@@ -116,5 +116,3 @@ require (
 	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/jumeng/einox => ../einox

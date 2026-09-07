@@ -14,7 +14,7 @@
 
 ## 维护约定
 
-- **钉 einox 最新发布版本**（go.mod require 已发布 tag，不用 replace 指向本地或 main）——公开代理可见的版本才是消费者实际拿到的。einox 发新版后升级依赖并按编译器提示修示例；先例：v0.1.1→v0.2.0 曾有 `NewManager` 返回值与 `Tools` 闭包签名两处漂移，随 v0.2.0 发布对齐、本仓同步升级。**当前临时态（2026-09-07）**：go.mod 挂 `replace ../einox` 对齐 v0.5.0 发布预备（消费面零 API 漂移、全量门禁绿）——v0.5.0 tag 发布后摘 replace 升 require。
+- **钉 einox 最新发布版本**（go.mod require 已发布 tag，不用 replace 指向本地或 main）——公开代理可见的版本才是消费者实际拿到的。einox 发新版后升级依赖并按编译器提示修示例；先例：v0.1.1→v0.2.0 曾有 `NewManager` 返回值与 `Tools` 闭包签名两处漂移，随 v0.2.0 发布对齐、本仓同步升级。当前钉 **v0.5.1**（2026-09-07；预备期曾临时挂 replace 对齐未发布 main，tag 后已摘除升 require，门禁在真实发布版复跑绿）。
 - **新示例遵循既有纪律**：llmtest 剧本驱动保证 CI 可跑；工具构造失败启动即拒（fail-fast，不静默吞错）；每轮 Run 后等 `TitleFlight()` 收口再读终态或开下一轮（首轮收尾的异步标题生成走同一模型工厂、同样消耗剧本槽位——不等待则剧本错位；经挂起+Resume 收尾的首轮同样有标题槽位——U-1 修复后首轮标记锚定 Run 入口，见主仓 findings/2026-09-07-assembly-skill-fieldtest.md）；emit 回调不含 `user_message`（用户输入落流/订阅面才可见）。
 - **新示例装配走 einox-assemble 知识层**：业务能力选择产出仓根 `einox.agent.yaml`（格式见 einox 仓 assemble/manifest-spec.md），装配代码按 assemble/patterns/ 套路——清单是能力选择的真源，示例注释只写该示例自身的通路与取舍。
 - **「业务 0 import eino」**由仓根 `boundary_test.go` 守卫——示例扮演业务 agent 消费者，同主仓架构验收线。
